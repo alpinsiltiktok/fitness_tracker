@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101812">
+    <meta name="description" content="Catat asupan kalori, makro, lari, dan progres mingguan Anda.">
+    <title>Stride & Spoon — Fitness Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Stride and Spoon beranda">
+          <span class="brand-mark" aria-hidden="true">S</span>
+          <span><strong>stride<span>&</span>spoon</strong><small>DAILY FITNESS JOURNAL</small></span>
+        </a>
+        <div class="sync-state" id="sync-state" data-state="loading" role="status" aria-live="polite">
+          <span class="sync-dot"></span><span id="sync-label">Menghubungkan...</span>
+        </div>
+      </header>
+
+      <main>
+        <section class="intro">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-line"></span>GERAK DENGAN TUJUAN</p>
+            <h1>Small steps.<br><span>Stronger every day.</span></h1>
+            <p class="intro-copy">Satu tempat untuk merawat progres lari dan nutrisi harianmu.</p>
+          </div>
+          <div class="date-chip"><span class="date-chip-icon" aria-hidden="true">◷</span><span id="today-label"></span></div>
+        </section>
+
+        <section class="summary-grid" aria-label="Ringkasan hari ini">
+          <article class="summary-card intake-card">
+            <div class="card-heading"><span>Asupan kalori</span><span class="card-icon" aria-hidden="true">＋</span></div>
+            <p class="summary-value"><span id="calories-in">0</span><small>kcal</small></p>
+            <div class="progress-track"><span id="calorie-progress"></span></div>
+            <p class="summary-foot"><span id="calorie-goal-label">Target 2.100 kcal</span><span id="calorie-percent">0%</span></p>
+          </article>
+          <article class="summary-card burn-card">
+            <div class="card-heading"><span>Kalori terbakar</span><span class="card-icon" aria-hidden="true">↗</span></div>
+            <p class="summary-value"><span id="calories-out">0</span><small>kcal</small></p>
+            <p class="summary-foot">Dari semua olahraga hari ini</p>
+          </article>
+          <article class="summary-card balance-card">
+            <div class="card-heading"><span>Kalori bersih</span><span class="card-icon" aria-hidden="true">◒</span></div>
+            <p class="summary-value"><span id="calorie-balance">0</span><small>kcal</small></p>
+            <p class="summary-foot">Asupan dikurangi kalori terbakar</p>
+          </article>
+        </section>
+
+        <section class="dashboard-grid">
+          <div class="main-column">
+            <article class="panel macro-panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">NUTRISI HARIAN</p><h2>Makro hari ini</h2></div>
+                <span class="date-caption">Target vs. konsumsi</span>
+              </div>
+              <div class="macro-list">
+                <div class="macro-row" data-macro-goal="protein">
+                  <div class="macro-meta"><span class="macro-name"><i class="macro-dot protein"></i>Protein</span><span><b id="protein-total">0</b> <small>/ <span id="protein-goal">65</span> g</small></span></div>
+                  <div class="progress-track macro-track"><span id="protein-progress"></span></div>
+                </div>
+                <div class="macro-row" data-macro-goal="carbs">
+                  <div class="macro-meta"><span class="macro-name"><i class="macro-dot carbs"></i>Karbohidrat</span><span><b id="carbs-total">0</b> <small>/ <span id="carbs-goal">430</span> g</small></span></div>
+                  <div class="progress-track macro-track"><span id="carbs-progress"></span></div>
+                </div>
+                <div class="macro-row" data-macro-goal="fat">
+                  <div class="macro-meta"><span class="macro-name"><i class="macro-dot fat"></i>Lemak</span><span><b id="fat-total">0</b> <small>/ <span id="fat-goal">75</span> g</small></span></div>
+                  <div class="progress-track macro-track"><span id="fat-progress"></span></div>
+                </div>
+                <p id="macro-empty-state" class="empty-state hidden">Target makro belum diatur.</p>
+              </div>
+            </article>
+            <details class="panel nutrient-panel">
+              <summary><span><span class="eyebrow">AKG HARIAN</span><strong>Vitamin &amp; mineral</strong></span><span class="details-chevron" aria-hidden="true">⌄</span></summary>
+              <p class="nutrient-reference" id="akg-profile-label"></p>
+              <div id="micronutrient-summary" class="nutrient-summary"></div>
+              <p class="nutrient-note">Persentase memakai acuan umum AKG, bukan penilaian kesehatan personal. Batas gula 50 g adalah anjuran, bukan AKG. <a href="https://peraturan.bpk.go.id/Details/138621/permenkes-no-28-tahun-2019" target="_blank" rel="noopener noreferrer">Sumber AKG: Permenkes 28/2019</a>.</p>
+            </details>
+
+            <article class="panel chart-panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">KONSISTENSI</p><h2>Jarak minggu ini</h2></div>
+                <div class="chart-stat"><strong id="weekly-distance">0.0</strong><span>km</span></div>
+              </div>
+              <div class="week-navigation" aria-label="Pilih minggu grafik">
+                <button id="week-previous" class="week-nav-button" type="button" aria-label="Minggu sebelumnya">‹</button>
+                <span id="selected-week-label">Minggu ini</span>
+                <button id="week-next" class="week-nav-button" type="button" aria-label="Minggu berikutnya" disabled>›</button>
+              </div>
+              <div class="chart-wrap mileage-chart-wrap">
+                <canvas id="mileage-chart" role="img" aria-label="Grafik jarak lari per hari minggu ini"></canvas>
+                <div id="mileage-chart-tooltip" class="chart-tooltip hidden" role="tooltip"></div>
+              </div>
+              <p class="chart-caption"><span id="weekly-goal-caption">Target mingguan 25 km</span><span id="weekly-progress-caption">0% tercapai · arahkan kursor ke grafik untuk detail</span></p>
+            </article>
+
+            <article class="panel chart-panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">SEMUA OLAHRAGA</p><h2 id="activity-chart-title">Kalori olahraga per hari</h2></div>
+                <span class="unit-pill">perkiraan kcal</span>
+              </div>
+              <form id="activity-chart-range-form" class="activity-chart-range">
+                <label for="activity-chart-from">Dari<input class="text-input" id="activity-chart-from" name="from" type="date" required></label>
+                <label for="activity-chart-to">Sampai<input class="text-input" id="activity-chart-to" name="to" type="date" required></label>
+                <button class="secondary-button" type="submit">Tampilkan</button>
+              </form>
+              <fieldset id="activity-chart-filters" class="chart-activity-filters">
+                <legend>Tampilkan aktivitas</legend>
+                <label><input type="checkbox" value="all" checked><span>Semua</span></label>
+                <label><input type="checkbox" value="run" checked><span>Lari</span></label>
+                <label><input type="checkbox" value="cycling" checked><span>Sepeda</span></label>
+                <label><input type="checkbox" value="swimming" checked><span>Renang</span></label>
+                <label><input type="checkbox" value="walking" checked><span>Jalan kaki</span></label>
+                <label><input type="checkbox" value="hiking" checked><span>Hiking</span></label>
+                <label><input type="checkbox" value="rowing" checked><span>Dayung</span></label>
+                <label><input type="checkbox" value="strength" checked><span>Free training</span></label>
+                <label><input type="checkbox" value="pushups" checked><span>Push-up</span></label>
+                <label><input type="checkbox" value="yoga" checked><span>Yoga</span></label>
+                <label><input type="checkbox" value="other" checked><span>Olahraga lainnya</span></label>
+                <label><input type="checkbox" value="custom" checked><span>Custom</span></label>
+              </fieldset>
+              <p id="activity-chart-range-status" class="chart-range-status" aria-live="polite">Pilih rentang tanggal hingga 5 tahun untuk melihat aktivitas sebelumnya.</p>
+              <div class="chart-wrap activity-chart-wrap">
+                <canvas id="activity-chart" role="img" aria-label="Grafik estimasi kalori semua aktivitas olahraga per hari"></canvas>
+                <div id="activity-chart-tooltip" class="chart-tooltip hidden" role="tooltip"></div>
+              </div>
+              <div id="activity-chart-legend" class="chart-legend"></div>
+              <p class="chart-caption"><span>Semua jenis olahraga · arahkan kursor ke grafik untuk detail</span></p>
+            </article>
+
+            <article class="panel chart-panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">RIWAYAT KALORI</p><h2 id="calorie-history-title">Asupan dan kalori terbakar</h2></div>
+                <span class="unit-pill">kcal</span>
+              </div>
+              <form id="calorie-history-range-form" class="activity-chart-range">
+                <label for="calorie-history-from">Dari<input class="text-input" id="calorie-history-from" name="from" type="date" required></label>
+                <label for="calorie-history-to">Sampai<input class="text-input" id="calorie-history-to" name="to" type="date" required></label>
+                <button class="secondary-button" type="submit">Tampilkan</button>
+              </form>
+              <p id="calorie-history-range-status" class="chart-range-status" aria-live="polite"></p>
+              <div class="chart-wrap activity-chart-wrap">
+                <canvas id="calorie-history-chart" role="img" aria-label="Grafik riwayat asupan kalori dan kalori terbakar"></canvas>
+                <div id="calorie-history-tooltip" class="chart-tooltip hidden" role="tooltip"></div>
+              </div>
+              <div id="calorie-history-legend" class="chart-legend"></div>
+              <p class="chart-caption"><span>Bandingkan kalori makanan dan olahraga · arahkan kursor untuk detail dan kalori bersih</span></p>
+            </article>
+
+            <article class="panel chart-panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">PERFORMA LARI</p><h2>Perkembangan pace</h2></div>
+                <span class="unit-pill">menit / km</span>
+              </div>
+            <form id="pace-chart-range-form" class="activity-chart-range">
+              <label for="pace-chart-from">Dari<input class="text-input" id="pace-chart-from" name="from" type="date" required></label>
+              <label for="pace-chart-to">Sampai<input class="text-input" id="pace-chart-to" name="to" type="date" required></label>
+              <button class="secondary-button" type="submit">Tampilkan</button>
+            </form>
+            <fieldset id="pace-chart-filters" class="chart-activity-filters">
+              <legend>Tampilkan aktivitas</legend>
+              <label><input type="checkbox" value="all" checked><span>Semua aktivitas lari</span></label>
+              <label><input type="checkbox" value="run" checked><span>Lari</span></label>
+              <label><input type="checkbox" value="trailrun" checked><span>Trail run</span></label>
+              <label><input type="checkbox" value="virtualrun" checked><span>Virtual run</span></label>
+            </fieldset>
+            <p id="pace-chart-range-status" class="chart-range-status" aria-live="polite"></p>
+            <div class="chart-wrap pace-chart-wrap">
+              <canvas id="pace-chart" role="img" aria-label="Grafik perkembangan pace lari"></canvas>
+              <div id="pace-chart-tooltip" class="chart-tooltip hidden" role="tooltip"></div>
+            </div>
+            </article>
+
+            <article class="panel chart-panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">PROGRES TUBUH</p><h2>Riwayat berat badan</h2></div>
+                <div class="chart-stat"><strong id="current-bmi">—</strong><span>BMI</span></div>
+              </div>
+              <div class="chart-wrap body-chart-wrap">
+                <canvas id="body-chart" role="img" aria-label="Grafik riwayat berat badan"></canvas>
+                <div id="body-chart-tooltip" class="chart-tooltip hidden" role="tooltip"></div>
+              </div>
+              <p id="body-chart-caption" class="chart-caption"><span>Masukkan pengukuran untuk melihat progres.</span></p>
+              <small class="goal-help">BMI hanya indikator skrining umum, bukan diagnosis medis.</small>
+            </article>
+          </div>
+
+          <div class="side-column">
+            <article class="panel entry-panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">CATAT PROGRES</p><h2>Tambah aktivitas</h2></div>
+                <span class="sparkle" aria-hidden="true">✳</span>
+              </div>
+              <div class="entry-tabs" role="tablist" aria-label="Jenis catatan">
+                <button class="entry-tab is-active" type="button" role="tab" aria-selected="true" data-entry-tab="meal">＋ Makanan</button>
+                <button class="entry-tab" type="button" role="tab" aria-selected="false" data-entry-tab="workout">↗ Olahraga</button>
+              </div>
+              <form id="log-form">
+                <input type="hidden" name="type" id="entry-type" value="meal">
+                <div data-entry-fields="meal">
+                  <div class="food-scan-box">
+                    <div class="ocr-title"><span aria-hidden="true">⌕</span><div><strong>Scan makanan</strong><small>Label gizi dibaca dengan OCR; foto hidangan menghasilkan estimasi AI.</small></div></div>
+                    <div class="food-scan-actions">
+                      <label class="upload-button" for="food-label-image">Scan label gizi</label>
+                      <input class="visually-hidden" id="food-label-image" type="file" accept="image/*" capture="environment">
+                      <label class="upload-button" for="food-photo-image">Estimasi foto hidangan</label>
+                      <input class="visually-hidden" id="food-photo-image" type="file" accept="image/*" capture="environment">
+                    </div>
+                    <img id="food-image-preview" class="image-preview hidden" alt="Preview gambar makanan">
+                    <div id="food-scan-status" class="ocr-status" aria-live="polite"></div>
+                    <div class="ocr-progress hidden" id="food-scan-progress-track"><span id="food-scan-progress"></span></div>
+                    <button class="secondary-button hidden" id="food-label-retry" type="button">Baca ulang label</button>
+                    <p class="food-scan-disclaimer">Estimasi foto bisa tidak akurat, terutama untuk porsi dan bahan tersembunyi; ini bukan saran medis atau ahli gizi. Periksa sebelum menyimpan. Foto dikirim ke layanan AI Google untuk dianalisis.</p>
+                  </div>
+                  <label class="field-label" for="meal-title">Nama makanan</label>
+                  <input class="text-input" id="meal-title" name="title" placeholder="Contoh: Oatmeal & pisang" required maxlength="120">
+                  <label class="field-label" for="meal-date">Tanggal & waktu</label>
+                  <input class="text-input" id="meal-date" name="date" type="datetime-local" required>
+                  <label class="field-label" for="meal-calories">Kalori <span>(kcal)</span></label>
+                  <input class="text-input" id="meal-calories" name="calories" type="number" min="0" max="20000" step="1" placeholder="450" required>
+                  <div class="field-grid three">
+                    <label class="field-label">Protein (g)<input class="text-input" name="protein" type="number" min="0" max="1000" step="0.1" placeholder="12"></label>
+                    <label class="field-label">Karbo (g)<input class="text-input" name="carbs" type="number" min="0" max="1000" step="0.1" placeholder="60"></label>
+                    <label class="field-label">Lemak (g)<input class="text-input" name="fat" type="number" min="0" max="1000" step="0.1" placeholder="9"></label>
+                  </div>
+                  <details class="nutrition-inputs">
+                    <summary>Nutrisi lain: gula, serat, vitamin, mineral</summary>
+                    <div class="field-grid three">
+                      <label class="field-label">Serat (g)<input class="text-input" name="fiberG" type="number" min="0" max="1000" step="0.1"></label>
+                      <label class="field-label">Gula (g)<input class="text-input" name="sugarG" type="number" min="0" max="1000" step="0.1"></label>
+                      <label class="field-label">Natrium (mg)<input class="text-input" name="sodiumMg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Vitamin A (mcg)<input class="text-input" name="vitaminAMcg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Vitamin D (mcg)<input class="text-input" name="vitaminDMcg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Vitamin E (mg)<input class="text-input" name="vitaminEMg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Vitamin K (mcg)<input class="text-input" name="vitaminKMcg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Vitamin B1 (mg)<input class="text-input" name="vitaminB1Mg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Vitamin B2 (mg)<input class="text-input" name="vitaminB2Mg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Vitamin B3 (mg)<input class="text-input" name="vitaminB3Mg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Vitamin B5 (mg)<input class="text-input" name="vitaminB5Mg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Vitamin B6 (mg)<input class="text-input" name="vitaminB6Mg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Folat / B9 (mcg)<input class="text-input" name="folateMcg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Vitamin B12 (mcg)<input class="text-input" name="vitaminB12Mcg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Vitamin C (mg)<input class="text-input" name="vitaminCMg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Kalsium (mg)<input class="text-input" name="calciumMg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Fosfor (mg)<input class="text-input" name="phosphorusMg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Magnesium (mg)<input class="text-input" name="magnesiumMg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Zat besi (mg)<input class="text-input" name="ironMg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Iodium (mcg)<input class="text-input" name="iodineMcg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Seng / zinc (mg)<input class="text-input" name="zincMg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Kalium (mg)<input class="text-input" name="potassiumMg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Tembaga (mcg)<input class="text-input" name="copperMcg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Selenium (mcg)<input class="text-input" name="seleniumMcg" type="number" min="0" max="100000" step="0.1"></label>
+                      <label class="field-label">Mangan (mg)<input class="text-input" name="manganeseMg" type="number" min="0" max="100000" step="0.1"></label>
+                    </div>
+                    <small class="nutrient-note">Isi bila data tersedia pada label atau sumber tepercaya. Foto makanan tidak dapat menentukan kandungan mikronutrien secara presisi.</small>
+                  </details>
+                </div>
+
+                <div data-entry-fields="workout" class="hidden">
+                  <label class="field-label" for="workout-title">Nama aktivitas</label>
+                  <input class="text-input" id="workout-title" name="title" placeholder="Morning Run" maxlength="120" required>
+                  <label class="field-label" for="workout-date">Tanggal & waktu</label>
+                  <input class="text-input" id="workout-date" name="date" type="datetime-local" required>
+                  <label class="field-label" for="workout-type">Jenis olahraga</label>
+                  <select class="text-input" id="workout-type" name="activityType">
+                    <option value="run">Lari</option>
+                    <option value="cycling">Sepeda</option>
+                    <option value="swimming">Renang</option>
+                    <option value="walking">Jalan kaki</option>
+                    <option value="hiking">Hiking</option>
+                    <option value="rowing">Dayung</option>
+                    <option value="strength">Free training</option>
+                    <option value="pushups">Push-up</option>
+                    <option value="yoga">Yoga</option>
+                    <option value="other">Olahraga lainnya</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                  <div id="custom-activity-field" class="hidden">
+                    <label class="field-label" for="custom-activity-name">Nama olahraga custom</label>
+                    <input class="text-input" id="custom-activity-name" name="activityName" placeholder="Contoh: Basket, tenis, atau zumba" maxlength="60">
+                  </div>
+                  <div id="activity-value-field" class="field-grid hidden">
+                    <label class="field-label" id="activity-value-label" for="activity-value">Jumlah repetisi<input class="text-input" id="activity-value" name="activityValue" type="number" min="0" max="100000" step="1" placeholder="Contoh: 20"></label>
+                    <label class="field-label" id="activity-unit-field">Satuan<input class="text-input" id="activity-unit" name="activityUnit" placeholder="Contoh: repetisi, menit, set" maxlength="20"></label>
+                  </div>
+                  <div class="field-grid" id="distance-field">
+                    <label class="field-label">Jarak (km)<input class="text-input" name="distanceKm" type="number" min="0.01" max="1000" step="0.01" placeholder="Contoh: 10.10"></label>
+                    <label class="field-label" id="pace-field">Pace / kecepatan<input class="text-input" name="pace" placeholder="7:03 /km atau 25 km/j" maxlength="20"></label>
+                  </div>
+                  <div class="field-grid">
+                    <label class="field-label" id="duration-field">Durasi olahraga<input class="text-input" name="movingTime" placeholder="1:11:16" maxlength="20"></label>
+                    <label class="field-label" id="elevation-field">Elevasi (m)<input class="text-input" name="elevationM" type="number" min="0" max="100000" step="1" placeholder="17"></label>
+                  </div>
+                  <label class="field-label">Kalori terbakar <span>(kcal)</span><input class="text-input" name="calories" type="number" min="0" max="20000" step="1" placeholder="Isi atau gunakan estimasi"></label>
+                  <div class="calorie-estimate-box">
+                    <small id="calorie-estimate-note">Estimasi membutuhkan durasi dan data berat badan.</small>
+                    <button id="estimate-calories" class="secondary-button" type="button">Isi estimasi kalori</button>
+                  </div>
+                  <div class="ocr-box" id="ocr-box">
+                    <div class="ocr-title"><span aria-hidden="true">▧</span><div><strong>Scan screenshot aktivitas</strong><small>OCR mengisi jenis olahraga dan data yang terbaca</small></div></div>
+                    <label class="upload-button" for="strava-image">Pilih screenshot</label>
+                    <input class="visually-hidden" id="strava-image" type="file" accept="image/*" capture="environment">
+                    <img id="image-preview" class="image-preview hidden" alt="Preview screenshot Strava">
+                    <div id="ocr-status" class="ocr-status" aria-live="polite"></div>
+                    <div class="ocr-progress hidden" id="ocr-progress-track"><span id="ocr-progress"></span></div>
+                    <button class="secondary-button hidden" id="ocr-button" type="button">Baca screenshot</button>
+                  </div>
+                </div>
+                <div class="log-form-actions">
+                  <button class="secondary-button hidden" id="cancel-edit-button" type="button">Batal edit</button>
+                  <button class="primary-button submit-button" id="save-button" type="submit"><span>Simpan catatan</span><span aria-hidden="true">↗</span></button>
+                </div>
+              </form>
+            </article>
+
+            <article class="panel body-entry-panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">PENGUKURAN TUBUH</p><h2>Tambah tinggi &amp; berat</h2></div>
+                <span class="sparkle" aria-hidden="true">⌁</span>
+              </div>
+              <p class="body-entry-help">Catat kapan saja—harian, beberapa hari sekali, atau mingguan. Data disinkronkan ke Google Sheets dan dicadangkan di perangkat ini.</p>
+              <form id="body-form">
+                <label class="field-label" for="body-date">Tanggal pengukuran</label>
+                <input class="text-input" id="body-date" name="date" type="date" required>
+                <div class="field-grid">
+                  <label class="field-label">Tinggi (cm)<input class="text-input" name="heightCm" type="number" min="50" max="300" step="0.1" placeholder="170" required></label>
+                  <label class="field-label">Berat (kg)<input class="text-input" name="weightKg" type="number" min="20" max="500" step="0.1" placeholder="65" required></label>
+                </div>
+                <div class="body-form-actions">
+                  <button id="cancel-body-edit" class="secondary-button hidden" type="button">Batal edit</button>
+                  <button id="save-body" class="primary-button" type="submit"><span>Simpan pengukuran</span><span aria-hidden="true">↗</span></button>
+                </div>
+              </form>
+              <div id="body-measurement-list" class="body-measurement-list"></div>
+              <button id="load-more-body" class="load-more hidden" type="button">Muat pengukuran sebelumnya</button>
+              <p id="empty-body-history" class="empty-state hidden">Belum ada data pengukuran.</p>
+            </article>
+
+            <details class="panel goals-panel">
+              <summary><span><span class="eyebrow">PREFERENSI</span><strong>Atur target &amp; periode</strong></span><span class="details-chevron" aria-hidden="true">⌄</span></summary>
+              <form id="goals-form" class="goals-form">
+                <div class="goal-setting-row" data-goal-setting="calories"><label class="field-label">Kalori (kcal)<input class="text-input" name="calories" type="number" min="0" max="10000"></label><div class="goal-row-actions"><button class="edit-target" type="button" data-edit-goal="calories">Edit</button><button class="remove-target" type="button" data-remove-goal="calories">Hapus</button></div></div>
+                <div class="goal-setting-row" data-goal-setting="protein"><label class="field-label">Protein (g)<input class="text-input" name="protein" type="number" min="0" max="1000"></label><div class="goal-row-actions"><button class="edit-target" type="button" data-edit-goal="protein">Edit</button><button class="remove-target" type="button" data-remove-goal="protein">Hapus</button></div></div>
+                <div class="goal-setting-row" data-goal-setting="carbs"><label class="field-label">Karbohidrat (g)<input class="text-input" name="carbs" type="number" min="0" max="1000"></label><div class="goal-row-actions"><button class="edit-target" type="button" data-edit-goal="carbs">Edit</button><button class="remove-target" type="button" data-remove-goal="carbs">Hapus</button></div></div>
+                <div class="goal-setting-row" data-goal-setting="fat"><label class="field-label">Lemak (g)<input class="text-input" name="fat" type="number" min="0" max="1000"></label><div class="goal-row-actions"><button class="edit-target" type="button" data-edit-goal="fat">Edit</button><button class="remove-target" type="button" data-remove-goal="fat">Hapus</button></div></div>
+                <div class="goal-setting-row has-period" data-goal-setting="weeklyKm"><label class="field-label">Jarak lari (km)<input class="text-input" name="weeklyKm" type="number" min="0" max="500" step="0.5"></label><label class="field-label goal-period-field">Periode<select class="text-input" data-goal-period="weeklyKm"><option value="daily">Harian</option><option value="weekly">Mingguan</option><option value="monthly">Bulanan</option><option value="yearly">Tahunan</option></select></label><div class="goal-row-actions"><button class="edit-target" type="button" data-edit-goal="weeklyKm">Edit</button><button class="remove-target" type="button" data-remove-goal="weeklyKm">Hapus</button></div></div>
+                <div class="goal-setting-row has-period" data-goal-setting="weeklyCyclingKm"><label class="field-label">Jarak sepeda (km)<input class="text-input" name="weeklyCyclingKm" type="number" min="0" max="2000" step="0.5"></label><label class="field-label goal-period-field">Periode<select class="text-input" data-goal-period="weeklyCyclingKm"><option value="daily">Harian</option><option value="weekly">Mingguan</option><option value="monthly">Bulanan</option><option value="yearly">Tahunan</option></select></label><div class="goal-row-actions"><button class="edit-target" type="button" data-edit-goal="weeklyCyclingKm">Edit</button><button class="remove-target" type="button" data-remove-goal="weeklyCyclingKm">Hapus</button></div></div>
+                <div class="goal-setting-row has-period" data-goal-setting="dailyPushups"><label class="field-label">Push-up (repetisi)<input class="text-input" name="dailyPushups" type="number" min="0" max="100000" step="1"></label><label class="field-label goal-period-field">Periode<select class="text-input" data-goal-period="dailyPushups"><option value="daily">Harian</option><option value="weekly">Mingguan</option><option value="monthly">Bulanan</option><option value="yearly">Tahunan</option></select></label><div class="goal-row-actions"><button class="edit-target" type="button" data-edit-goal="dailyPushups">Edit</button><button class="remove-target" type="button" data-remove-goal="dailyPushups">Hapus</button></div></div>
+                <div id="restore-goal-settings" class="restore-goal-settings hidden" aria-label="Tambah kembali target"></div>
+                <div class="custom-target-heading"><strong>Target custom</strong><button class="load-more" id="add-custom-target" type="button">＋ Tambah target</button></div>
+                <small class="goal-help">Target nutrisi: Edit jumlah saja. Target olahraga: Edit target/periode. Target custom: Edit detail termasuk nama, jumlah, satuan, dan periode. Setelah mengubah, tekan Selesai lalu Simpan target.</small>
+                <div id="custom-target-list" class="custom-target-list"></div>
+                <button class="secondary-button" type="submit">Simpan target</button>
+              </form>
+            </details>
+          </div>
+        </section>
+        <section class="panel target-progress-panel">
+          <div class="panel-heading"><div><p class="eyebrow">KONSISTENSI</p><h2>Target aktivitas</h2></div></div>
+          <div id="activity-target-progress" class="target-progress-list"></div>
+          <p id="activity-target-empty" class="empty-state hidden">Belum ada target aktivitas. Tambahkan kembali lewat preferensi target.</p>
+        </section>
+
+        <section class="panel history-panel">
+          <div class="panel-heading history-heading">
+            <div><p class="eyebrow">JURNAL AKTIVITAS</p><h2>Catatan terbaru</h2></div>
+            <label class="filter-label" for="history-filter">Tampilkan
+              <select id="history-filter" class="filter-select">
+                <option value="7">7 hari</option>
+                <option value="30">30 hari</option>
+                <option value="all">Semua</option>
+              </select>
+            </label>
+          </div>
+          <div class="strava-import-box">
+            <div>
+              <strong>Sinkronkan arsip Strava</strong>
+              <p id="strava-import-status" class="strava-import-status" aria-live="polite">Pilih arsip ZIP ekspor Strava. Aktivitas yang sudah pernah diimpor akan dilewati.</p>
+            </div>
+            <input class="visually-hidden" id="strava-archive" type="file" accept=".zip,application/zip">
+            <button id="strava-import-button" class="secondary-button" type="button">Pilih arsip ZIP</button>
+          </div>
+          <div id="activity-list" class="activity-list"></div>
+          <p id="empty-history" class="empty-state hidden">Belum ada catatan. Tambahkan makanan atau aktivitas pertamamu.</p>
+          <button id="load-more" class="load-more hidden" type="button">Muat lebih banyak</button>
+        </section>
+      </main>
+      <footer class="footer"><span>stride&spoon</span><span>Progress, not perfection.</span></footer>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

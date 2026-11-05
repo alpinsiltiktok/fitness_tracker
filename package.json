@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node local-server.mjs",
+    "start:configured": "node --env-file=.env.local local-server.mjs"
+  }
+}

@@ -2161,8 +2161,8 @@ function applyNutritionFields(fields) {
 }
 
 function setupFoodScanner() {
-  const labelInput = $('#food-label-image');
-  const photoInput = $('#food-photo-image');
+  const labelInputs = [$('#food-label-file'), $('#food-label-camera')];
+  const photoInputs = [$('#food-photo-file'), $('#food-photo-camera')];
   const preview = $('#food-image-preview');
   const status = $('#food-scan-status');
   const progressTrack = $('#food-scan-progress-track');
@@ -2204,19 +2204,22 @@ function setupFoodScanner() {
     }
   };
 
-  labelInput.addEventListener('change', () => {
-    selectedLabelFile = labelInput.files?.[0] || null;
-    if (!selectedLabelFile) return;
-    showPreview(selectedLabelFile);
+  labelInputs.forEach((input) => input.addEventListener('change', () => {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    selectedLabelFile = file;
+    showPreview(file);
     retryButton.classList.remove('hidden');
-    scanLabel(selectedLabelFile);
-  });
+    scanLabel(file);
+  }));
   retryButton.addEventListener('click', () => {
     if (selectedLabelFile) scanLabel(selectedLabelFile);
   });
 
-  photoInput.addEventListener('change', async () => {
-    const file = photoInput.files?.[0];
+  photoInputs.forEach((input) => input.addEventListener('change', async () => {
+    const file = input.files?.[0];
+    input.value = '';
     if (!file) return;
     showPreview(file);
     progressTrack.classList.add('hidden');
@@ -2261,7 +2264,7 @@ function setupFoodScanner() {
       status.textContent = error.message;
       notify(error.message, 'error');
     }
-  });
+  }));
 }
 
 function initialize() {

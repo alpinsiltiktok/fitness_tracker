@@ -208,10 +208,24 @@
                   <div class="food-scan-box">
                     <div class="ocr-title"><span aria-hidden="true">⌕</span><div><strong>Scan makanan</strong><small>Label gizi dibaca dengan OCR; foto hidangan menghasilkan estimasi AI.</small></div></div>
                     <div class="food-scan-actions">
-                      <label class="upload-button" for="food-label-image">Scan label gizi</label>
-                      <input class="visually-hidden" id="food-label-image" type="file" accept="image/*" capture="environment">
-                      <label class="upload-button" for="food-photo-image">Estimasi foto hidangan</label>
-                      <input class="visually-hidden" id="food-photo-image" type="file" accept="image/*" capture="environment">
+                      <div class="food-scan-option">
+                        <strong>Label gizi · OCR</strong>
+                        <div class="food-scan-option-actions">
+                          <label class="upload-button" for="food-label-file">Upload file</label>
+                          <input class="visually-hidden" id="food-label-file" type="file" accept="image/*">
+                          <label class="upload-button" for="food-label-camera">Buka kamera</label>
+                          <input class="visually-hidden" id="food-label-camera" type="file" accept="image/*" capture="environment">
+                        </div>
+                      </div>
+                      <div class="food-scan-option">
+                        <strong>Foto hidangan · Estimasi AI</strong>
+                        <div class="food-scan-option-actions">
+                          <label class="upload-button" for="food-photo-file">Upload file</label>
+                          <input class="visually-hidden" id="food-photo-file" type="file" accept="image/*">
+                          <label class="upload-button" for="food-photo-camera">Buka kamera</label>
+                          <input class="visually-hidden" id="food-photo-camera" type="file" accept="image/*" capture="environment">
+                        </div>
+                      </div>
                     </div>
                     <img id="food-image-preview" class="image-preview hidden" alt="Preview gambar makanan">
                     <div id="food-scan-status" class="ocr-status" aria-live="polite"></div>

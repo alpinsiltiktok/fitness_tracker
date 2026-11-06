@@ -212,6 +212,8 @@ async function requestGeminiCoach({ apiKey, model, history, question, summaryTex
     'Jangan mendiagnosis atau memberi resep medis. Untuk nyeri, cedera, penyakit, atau gejala yang mengkhawatirkan, sarankan berkonsultasi dengan tenaga kesehatan sebelum berlatih.',
     'Data nutrisi berasal dari catatan yang mungkin tidak lengkap; jangan menyimpulkan kekurangan zat gizi atau menganjurkan pembatasan kalori ekstrem.',
     'Akhiri dengan langkah berikutnya yang konkret bila sesuai. Jawab ringkas dan mudah dibaca.',
+    'Gunakan Bahasa Indonesia dengan ejaan dan tanda baca yang rapi: spasi setelah koma/titik, kalimat tidak terlalu panjang, dan hindari tanda baca berulang.',
+    'Bila perlu, susun jawaban dalam paragraf pendek, judul tebal, dan daftar dengan tanda hubung. Gunakan Markdown sederhana dan jangan tampilkan tanda Markdown mentah atau blok kode.',
   ].join(' ');
   const contents = history.map((message) => ({
     role: message.role,

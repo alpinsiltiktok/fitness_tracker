@@ -69,9 +69,17 @@ h1 span { color: var(--lime); }
 .coach-prompt:hover { border-color: var(--lime-dark); color: var(--lime); }
 .fitness-coach-messages { display: grid; gap: 9px; max-height: 300px; margin-bottom: 11px; overflow-y: auto; }
 .fitness-coach-empty { margin: 0; padding: 12px; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); font-size: 10px; text-align: center; }
-.fitness-coach-message { max-width: 94%; padding: 9px 10px; border-radius: 10px; font-size: 10px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.fitness-coach-message { max-width: 94%; padding: 9px 10px; border-radius: 10px; font-size: 10px; line-height: 1.65; overflow-wrap: anywhere; }
 .fitness-coach-message[data-role="user"] { justify-self: end; background: #c8f16919; color: var(--text); }
 .fitness-coach-message[data-role="assistant"] { justify-self: start; border: 1px solid var(--border); background: #111a14; color: #e2e8de; }
+.fitness-coach-message[data-role="user"] { white-space: pre-wrap; }
+.fitness-coach-message[data-role="assistant"] p { margin: 0 0 9px; }
+.fitness-coach-message[data-role="assistant"] p:last-child { margin-bottom: 0; }
+.fitness-coach-message[data-role="assistant"] h3 { margin: 2px 0 7px; color: var(--lime); font-size: 10px; line-height: 1.5; }
+.fitness-coach-message[data-role="assistant"] ul, .fitness-coach-message[data-role="assistant"] ol { display: grid; gap: 5px; margin: 0 0 9px; padding-left: 18px; }
+.fitness-coach-message[data-role="assistant"] li { padding-left: 2px; }
+.fitness-coach-message[data-role="assistant"] strong { color: #f0f4eb; }
+.fitness-coach-message[data-role="assistant"] code { padding: 1px 4px; border-radius: 4px; background: #29362c; font-size: .95em; }
 .fitness-coach-form { display: grid; gap: 8px; }
 .fitness-coach-input { resize: vertical; font-size: 10px; }
 .fitness-coach-form .primary-button { min-height: 37px; }

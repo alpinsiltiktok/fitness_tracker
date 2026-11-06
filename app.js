@@ -2353,12 +2353,79 @@ function setupFitnessCoach() {
   const status = $('#fitness-coach-status');
   const conversation = [];
 
+  const appendFormattedText = (parent, text) => {
+    const formatting = /(\*\*([^*]+)\*\*|__([^_]+)__|\*([^*\n]+)\*|`([^`\n]+)`)/g;
+    let lastIndex = 0;
+    for (const match of text.matchAll(formatting)) {
+      if (match.index > lastIndex) {
+        parent.append(document.createTextNode(text.slice(lastIndex, match.index)));
+      }
+      const element = document.createElement(match[5] ? 'code' : match[4] ? 'em' : 'strong');
+      element.textContent = match[2] || match[3] || match[4] || match[5];
+      parent.append(element);
+      lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex < text.length) {
+      parent.append(document.createTextNode(text.slice(lastIndex)));
+    }
+  };
+
+  const renderCoachAnswer = (element, text) => {
+    const lines = text.replace(/\r\n?/g, '\n').split('\n');
+    let index = 0;
+    while (index < lines.length) {
+      const line = lines[index].trim();
+      if (!line) {
+        index += 1;
+        continue;
+      }
+
+      const heading = line.match(/^#{1,3}\s+(.+?)\s*#*$/);
+      if (heading) {
+        const title = document.createElement('h3');
+        appendFormattedText(title, heading[1]);
+        element.append(title);
+        index += 1;
+        continue;
+      }
+
+      const listItem = line.match(/^(?:[-*•]\s+|\d+[.)]\s+)(.+)$/);
+      if (listItem) {
+        const ordered = /^\d+[.)]\s+/.test(line);
+        const list = document.createElement(ordered ? 'ol' : 'ul');
+        while (index < lines.length) {
+          const item = lines[index].trim().match(/^(?:[-*•]\s+|\d+[.)]\s+)(.+)$/);
+          if (!item || /^\d+[.)]\s+/.test(lines[index].trim()) !== ordered) break;
+          const entry = document.createElement('li');
+          appendFormattedText(entry, item[1]);
+          list.append(entry);
+          index += 1;
+        }
+        element.append(list);
+        continue;
+      }
+
+      const paragraphLines = [line];
+      index += 1;
+      while (index < lines.length && lines[index].trim()
+        && !/^#{1,3}\s+/.test(lines[index].trim())
+        && !/^(?:[-*•]\s+|\d+[.)]\s+)/.test(lines[index].trim())) {
+        paragraphLines.push(lines[index].trim());
+        index += 1;
+      }
+      const paragraph = document.createElement('p');
+      appendFormattedText(paragraph, paragraphLines.join(' '));
+      element.append(paragraph);
+    }
+  };
+
   const addMessage = (role, text) => {
     messagesElement.querySelector('.fitness-coach-empty')?.remove();
-    const message = document.createElement('p');
+    const message = document.createElement('div');
     message.className = 'fitness-coach-message';
     message.dataset.role = role;
-    message.textContent = text;
+    if (role === 'assistant') renderCoachAnswer(message, text);
+    else message.textContent = text;
     messagesElement.append(message);
     while (messagesElement.children.length > 20) messagesElement.firstElementChild.remove();
     messagesElement.scrollTop = messagesElement.scrollHeight;

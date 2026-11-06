@@ -60,7 +60,11 @@ function parseStravaText(text) {
   }
 
   const metricLines = new Set();
-  for (const line of lines) {
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    const line = lines[lineIndex];
+    const nearbyLines = [lines[lineIndex - 1], line, lines[lineIndex + 1]].filter(Boolean);
+    const nearbyText = nearbyLines.join(' ');
+    const hasPaceLabel = /\b(?:average\s+pace|avg\.?\s*pace|pace)\b/i.test(nearbyText);
     const isNonDistanceMetric = /\b(?:speed|pace|elev(?:ation)?|gain)\b/i.test(line);
     const distance = !isNonDistanceMetric && (
       line.match(/(?:distance\D{0,8})?(\d{1,4}(?:[.,]\d{1,3})?)\s*(km|mi)\b/i)
@@ -80,10 +84,13 @@ function parseStravaText(text) {
       }
     }
 
-    const swimPace = line.match(/(\d{1,2}):([0-5]\d)\s*(?:min(?:utes?)?\s*)?\/\s*(100\s*m|100m)\b/i);
-    const speed = line.match(/(\d{1,3}(?:[.,]\d+)?)\s*(km\/h|kmh|kph|mi\/h|mph)\b/i);
-    const pace = line.match(/(\d{1,2}):([0-5]\d)\s*(?:min(?:utes?)?\s*)?\/\s*(km|mi)\b/i)
-      || line.match(/(\d{1,2}):([0-5]\d)\s*(km|mi)\b/i);
+    const paceText = hasPaceLabel ? nearbyText : line;
+    const swimPace = paceText.match(/(\d{1,2}):([0-5]\d)\s*(?:min(?:utes?)?\s*)?\/\s*(100\s*m|100m)\b/i);
+    const speed = paceText.match(/(\d{1,3}(?:[.,]\d+)?)\s*(km\/h|kmh|kph|mi\/h|mph)\b/i);
+    const pace = paceText.match(/(\d{1,2}):([0-5]\d)\s*(?:min(?:utes?)?\s*)?\/\s*(km|mi)\b/i)
+      || paceText.match(/(\d{1,2}):([0-5]\d)\s*(km|mi)\b/i)
+      || (hasPaceLabel && !/\b\d{1,2}:\d{2}:\d{2}\b/.test(paceText)
+        && paceText.match(/(\d{1,2}):([0-5]\d)\b/));
     if (swimPace) {
       extracted.pace = `${Number(swimPace[1])}:${String(swimPace[2]).padStart(2, '0')} /100m`;
       metricLines.add(line);
@@ -94,16 +101,19 @@ function parseStravaText(text) {
       metricLines.add(line);
     } else if (pace) {
       let paceSeconds = Number(pace[1]) * 60 + Number(pace[2]);
-      if (pace[3].toLowerCase() === 'mi') paceSeconds /= 1.609344;
+      if (pace[3]?.toLowerCase() === 'mi' || (!pace[3] && /\bmi\b/i.test(paceText))) {
+        paceSeconds /= 1.609344;
+      }
       const minutes = Math.floor(paceSeconds / 60);
       const seconds = Math.round(paceSeconds % 60);
       extracted.pace = `${minutes}:${String(seconds).padStart(2, '0')} /km`;
-      metricLines.add(line);
+      nearbyLines.forEach((nearbyLine) => metricLines.add(nearbyLine));
     }
 
     const duration = line.match(/(?:moving time|elapsed time|duration|time)\D{0,10}((?:(\d{1,2}):)?([0-5]?\d):([0-5]\d))\b/i)
       || line.match(/\b((?:(\d{1,2}):)?([0-5]?\d):([0-5]\d))\b/);
-    if (duration && !/\/\s*(?:km|mi)\b/i.test(line)) {
+    const hasDurationLabel = /\b(?:moving time|elapsed time|duration)\b/i.test(line);
+    if (duration && (!hasPaceLabel || hasDurationLabel) && !/\/\s*(?:km|mi)\b/i.test(line)) {
       const rawDuration = duration[1];
       extracted.movingTime = /^\d{1,2}:\d{2}:\d{2}$/.test(rawDuration)
         ? rawDuration
@@ -111,12 +121,25 @@ function parseStravaText(text) {
       metricLines.add(line);
     }
 
-    const elevation = line.match(/(?:elev(?:ation)?(?:\s+gain)?|gain)\D{0,12}(\d{1,6}(?:[.,]\d+)?)\s*(m|ft)\b/i);
-    if (elevation) {
-      const value = parseMetricNumber(elevation[1]);
-      const meters = elevation[2].toLowerCase() === 'ft' ? value * 0.3048 : value;
-      extracted.elevationM = String(Math.round(meters));
-      metricLines.add(line);
+    if (/\b(?:elev(?:ation)?(?:\s+gain)?|gain)\b/i.test(nearbyText)) {
+      for (const candidate of [line, lines[lineIndex - 1], lines[lineIndex + 1]].filter(Boolean)) {
+        const elevation = candidate.match(/(\d{1,3}(?:,\d{3})+|\d{1,6}(?:[.,]\d+)?)\s*(m|ft)\b/i);
+        const labeledValue = candidate.match(/\b(?:elev(?:ation)?(?:\s+gain)?|gain)\b\D{0,12}(\d{1,3}(?:,\d{3})+|\d{1,6}(?:[.,]\d+)?)(?![\d.,])/i);
+        const standaloneValue = candidate.match(/^\s*(\d{1,3}(?:,\d{3})+|\d{1,6}(?:[.,]\d+)?)\s*$/);
+        const valueMatch = elevation && !candidate.slice(0, elevation.index).trimEnd().endsWith('/')
+          ? { value: elevation[1], unit: elevation[2] }
+          : labeledValue
+            ? { value: labeledValue[1], unit: 'm' }
+            : standaloneValue
+              ? { value: standaloneValue[1], unit: 'm' }
+              : null;
+        if (!valueMatch) continue;
+        const value = parseMetricNumber(valueMatch.value);
+        const meters = valueMatch.unit.toLowerCase() === 'ft' ? value * 0.3048 : value;
+        extracted.elevationM = String(Math.round(meters));
+        nearbyLines.forEach((nearbyLine) => metricLines.add(nearbyLine));
+        break;
+      }
     }
   }
 

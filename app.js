@@ -198,7 +198,7 @@ function showSyncError(error) {
   setSyncState('offline', 'Gagal sinkron · tersimpan lokal');
 }
 
-async function requestApi(method, params = {}, payload = null) {
+async function requestApi(method, params = {}, payload = null, timeoutMs = 15000) {
   const url = new URL(API_URL, window.location.href);
   if (method === 'GET') {
     Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
@@ -207,7 +207,7 @@ async function requestApi(method, params = {}, payload = null) {
     method,
     headers: method === 'POST' ? { 'Content-Type': 'application/json' } : undefined,
     body: method === 'POST' ? JSON.stringify(payload) : undefined,
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!response.headers.get('content-type')?.includes('application/json')) {
     throw new Error(response.ok
@@ -2269,6 +2269,145 @@ function setupFoodScanner() {
   }));
 }
 
+function buildFitnessCoachSummary() {
+  const today = localDateKey();
+  const workoutStart = weekDateKeys(-7)[0];
+  const nutritionStartDate = new Date(`${today}T12:00:00`);
+  nutritionStartDate.setDate(nutritionStartDate.getDate() - 13);
+  const nutritionStart = localDateKey(nutritionStartDate);
+  const recentWorkouts = activeRecords().filter((record) => record.type === 'workout'
+    && dateKey(record.date) >= workoutStart && dateKey(record.date) <= today);
+  const weeklyActivity = Array.from({ length: 8 }, (_, index) => {
+    const week = weekDateKeys(index - 7);
+    const entries = recentWorkouts.filter((record) => dateKey(record.date) >= week[0]
+      && dateKey(record.date) <= week[6]);
+    const runs = entries.filter((record) => activityType(record) === 'run');
+    const paces = runs
+      .filter((record) => /\/\s*km\b/i.test(String(record.pace || '')))
+      .map((record) => paceSeconds(record.pace))
+      .filter((value) => value !== null);
+    const averagePaceSeconds = paces.length
+      ? Math.round(paces.reduce((total, value) => total + value, 0) / paces.length)
+      : null;
+    return {
+      weekOf: week[0],
+      activityCount: entries.length,
+      runCount: runs.length,
+      runDistanceKm: Number(sum(runs, 'distanceKm').toFixed(2)),
+      longestRunKm: runs.length
+        ? Number(Math.max(...runs.map((run) => Number(run.distanceKm) || 0)).toFixed(2))
+        : null,
+      averageRunPacePerKm: averagePaceSeconds !== null
+        ? `${Math.floor(averagePaceSeconds / 60)}:${String(averagePaceSeconds % 60).padStart(2, '0')} /km`
+        : null,
+    };
+  });
+  const sportCounts = {};
+  for (const workout of recentWorkouts) {
+    const type = activityType(workout);
+    const label = type === 'custom' ? 'Custom' : ACTIVITY_TYPES[type]?.label || 'Olahraga lainnya';
+    sportCounts[label] = (sportCounts[label] || 0) + 1;
+  }
+
+  const recentMeals = activeRecords().filter((record) => record.type === 'meal'
+    && dateKey(record.date) >= nutritionStart && dateKey(record.date) <= today);
+  const mealDays = new Set(recentMeals.map((record) => dateKey(record.date)));
+  const nutritionKeys = ['calories', 'protein', 'carbs', 'fat', 'fiberG', 'sugarG', 'sodiumMg'];
+  const nutritionAverages = Object.fromEntries(nutritionKeys.map((key) => [
+    key,
+    mealDays.size ? Number((sum(recentMeals, key) / mealDays.size).toFixed(1)) : null,
+  ]));
+
+  return {
+    period: { from: workoutStart, to: today },
+    workouts: {
+      activityCount: recentWorkouts.length,
+      activeDays: new Set(recentWorkouts.map((record) => dateKey(record.date))).size,
+      bySport: sportCounts,
+      weeklyRunning: weeklyActivity,
+      runningGoal: {
+        value: goals.weeklyKm,
+        period: goals.goalPeriods?.weeklyKm || 'weekly',
+      },
+    },
+    nutrition: {
+      periodDays: 14,
+      loggedDays: mealDays.size,
+      averagesPerLoggedDay: nutritionAverages,
+      dataQualityNote: 'Kolom nutrisi yang tidak diisi tersimpan sebagai 0; rerata makro dan mikronutrien dapat lebih rendah jika pencatatan tidak lengkap.',
+      dailyTargets: {
+        calories: goals.calories,
+        protein: goals.protein,
+        carbs: goals.carbs,
+        fat: goals.fat,
+      },
+    },
+  };
+}
+
+function setupFitnessCoach() {
+  const form = $('#fitness-coach-form');
+  const questionInput = $('#fitness-coach-question');
+  const sendButton = $('#fitness-coach-send');
+  const messagesElement = $('#fitness-coach-messages');
+  const status = $('#fitness-coach-status');
+  const conversation = [];
+
+  const addMessage = (role, text) => {
+    messagesElement.querySelector('.fitness-coach-empty')?.remove();
+    const message = document.createElement('p');
+    message.className = 'fitness-coach-message';
+    message.dataset.role = role;
+    message.textContent = text;
+    messagesElement.append(message);
+    while (messagesElement.children.length > 20) messagesElement.firstElementChild.remove();
+    messagesElement.scrollTop = messagesElement.scrollHeight;
+    return message;
+  };
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const question = questionInput.value.trim();
+    if (!question) return;
+    sendButton.disabled = true;
+    questionInput.disabled = true;
+    status.dataset.kind = '';
+    status.textContent = 'AI sedang membaca ringkasan progresmu...';
+    const pendingQuestion = addMessage('user', question);
+    try {
+      const result = await requestApi('POST', {}, {
+        action: 'fitnessCoach',
+        question,
+        history: conversation.slice(-8),
+        summary: buildFitnessCoachSummary(),
+      }, 45000);
+      if (typeof result.answer !== 'string' || !result.answer.trim()) {
+        throw new Error('AI mengirim jawaban kosong. Coba tanyakan lagi.');
+      }
+      conversation.push({ role: 'user', text: question }, { role: 'model', text: result.answer });
+      while (conversation.length > 8) conversation.splice(0, 2);
+      addMessage('assistant', result.answer.trim());
+      questionInput.value = '';
+      status.textContent = result.model ? `Dijawab oleh ${result.model}.` : 'Jawaban AI siap.';
+    } catch (error) {
+      pendingQuestion.remove();
+      status.dataset.kind = 'error';
+      status.textContent = error.message || 'AI tidak dapat menjawab saat ini.';
+    } finally {
+      sendButton.disabled = false;
+      questionInput.disabled = false;
+      questionInput.focus();
+    }
+  });
+
+  document.querySelectorAll('.coach-prompt').forEach((button) => {
+    button.addEventListener('click', () => {
+      questionInput.value = button.textContent.trim();
+      form.requestSubmit();
+    });
+  });
+}
+
 function initialize() {
   setDefaultDates();
   const currentWeek = weekDateKeys(0);
@@ -2290,6 +2429,7 @@ function initialize() {
   });
   setupChartActivityFilters('activity-chart-filters', selectedActivityChartTypes, drawActivityChart);
   setupChartActivityFilters('pace-chart-filters', selectedPaceChartTypes, drawPaceChart);
+  setupFitnessCoach();
   resetMeasurementForm();
   updateGoalsForm();
   setEntryType('meal');

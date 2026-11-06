@@ -193,6 +193,29 @@
           </div>
 
           <div class="side-column">
+            <article class="panel fitness-coach-panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">FITNESS AI</p><h2>Tanya AI</h2></div>
+                <span class="card-icon" aria-hidden="true">✦</span>
+              </div>
+              <p class="fitness-coach-intro">Tanya tentang tren latihan, kesiapan HM, nutrisi, atau rencana latihan berdasarkan catatanmu.</p>
+              <div class="fitness-coach-prompts" aria-label="Contoh pertanyaan">
+                <button class="coach-prompt" type="button">Evaluasi kesiapan saya untuk HM</button>
+                <button class="coach-prompt" type="button">Bagaimana tren lari saya 8 minggu terakhir?</button>
+                <button class="coach-prompt" type="button">Bagaimana pola nutrisi saya?</button>
+                <button class="coach-prompt" type="button">Buat rencana latihan minggu depan</button>
+              </div>
+              <div id="fitness-coach-messages" class="fitness-coach-messages" role="log" aria-live="polite" aria-label="Percakapan dengan AI">
+                <p class="fitness-coach-empty">Belum ada percakapan. Pilih pertanyaan atau tulis pertanyaanmu.</p>
+              </div>
+              <form id="fitness-coach-form" class="fitness-coach-form">
+                <label class="visually-hidden" for="fitness-coach-question">Pertanyaan untuk AI</label>
+                <textarea class="text-input fitness-coach-input" id="fitness-coach-question" name="question" rows="3" maxlength="1200" placeholder="Tulis pertanyaan tentang latihan atau nutrisi..." required></textarea>
+                <button id="fitness-coach-send" class="primary-button" type="submit"><span>Tanya AI</span><span aria-hidden="true">↗</span></button>
+              </form>
+              <p id="fitness-coach-status" class="fitness-coach-status" aria-live="polite"></p>
+              <p class="fitness-coach-disclaimer">Ringkasan olahraga 8 minggu dan nutrisi 14 hari terakhir (tanpa nama makanan atau aktivitas) serta pertanyaanmu dikirim ke Google Gemini. Hindari menulis data pribadi di pertanyaan. Percakapan tidak disimpan aplikasi. Saran bersifat umum, bukan diagnosis medis atau pengganti pelatih/ahli gizi.</p>
+            </article>
             <article class="panel entry-panel">
               <div class="panel-heading">
                 <div><p class="eyebrow">CATAT PROGRES</p><h2>Tambah aktivitas</h2></div>

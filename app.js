@@ -1938,12 +1938,13 @@ function applyOcrFields(fields) {
 }
 
 function setupOcr() {
-  const imageInput = $('#strava-image');
+  const imageInputs = [$('#strava-image-file'), $('#strava-image-camera')];
   const imagePreview = $('#image-preview');
   const button = $('#ocr-button');
   const status = $('#ocr-status');
   const progressTrack = $('#ocr-progress-track');
   const progressBar = $('#ocr-progress');
+  let selectedImageFile = null;
 
   const runOcr = async (file) => {
     button.disabled = true;
@@ -1983,9 +1984,11 @@ function setupOcr() {
     }
   };
 
-  imageInput.addEventListener('change', () => {
+  imageInputs.forEach((imageInput) => imageInput.addEventListener('change', () => {
     const file = imageInput.files?.[0];
+    imageInput.value = '';
     if (!file) return;
+    selectedImageFile = file;
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     previewUrl = URL.createObjectURL(file);
     imagePreview.src = previewUrl;
@@ -1993,12 +1996,11 @@ function setupOcr() {
     button.classList.remove('hidden');
     status.textContent = 'Screenshot dipilih. Membaca data aktivitas secara otomatis...';
     runOcr(file);
-  });
+  }));
 
   button.addEventListener('click', async () => {
-    const file = imageInput.files?.[0];
-    if (!file) return;
-    await runOcr(file);
+    if (!selectedImageFile) return;
+    await runOcr(selectedImageFile);
   });
 }
 

@@ -319,8 +319,12 @@
                   </div>
                   <div class="ocr-box" id="ocr-box">
                     <div class="ocr-title"><span aria-hidden="true">▧</span><div><strong>Scan screenshot aktivitas</strong><small>OCR mengisi jenis olahraga dan data yang terbaca</small></div></div>
-                    <label class="upload-button" for="strava-image">Pilih screenshot</label>
-                    <input class="visually-hidden" id="strava-image" type="file" accept="image/*" capture="environment">
+                    <div class="food-scan-option-actions">
+                      <label class="upload-button" for="strava-image-file">Upload file</label>
+                      <input class="visually-hidden" id="strava-image-file" type="file" accept="image/*">
+                      <label class="upload-button" for="strava-image-camera">Buka kamera</label>
+                      <input class="visually-hidden" id="strava-image-camera" type="file" accept="image/*" capture="environment">
+                    </div>
                     <img id="image-preview" class="image-preview hidden" alt="Preview screenshot Strava">
                     <div id="ocr-status" class="ocr-status" aria-live="polite"></div>
                     <div class="ocr-progress hidden" id="ocr-progress-track"><span id="ocr-progress"></span></div>

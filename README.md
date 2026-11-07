@@ -8,6 +8,7 @@ Aplikasi web statis mobile-first untuk mencatat nutrisi harian, target olahraga,
 - `strava-ocr.js` — OCR screenshot dan parser field aktivitas.
 - `strava-import.js` — pembaca `activities.csv` langsung dari arsip ZIP Strava di browser.
 - `food-scan.js` — OCR label gizi dan kompresi foto sebelum estimasi.
+- `manifest.webmanifest`, `sw.js`, `icons/stride-icon.svg` — instalasi PWA dan cache shell aplikasi agar dashboard dapat dibuka offline.
 - `google-apps-script/Code.gs` — jembatan Google Apps Script ke spreadsheet.
 - `netlify/functions/sheets.mjs` — proxy server-side untuk Google Sheets dan estimasi foto Gemini agar kunci API tidak diekspos ke browser.
 - `netlify.toml` — konfigurasi publish statis dan Netlify Functions.
@@ -35,6 +36,10 @@ Apps Script menerima `GET` untuk membaca log atau pengukuran dan `POST` berisi a
 3. Deploy/redeploy site. Buka domain Netlify melalui HTTPS untuk menggunakan OCR dan sinkronisasi.
 
 Tidak ada secret pada client. Endpoint Apps Script tetap harus dapat dipanggil oleh Netlify, sementara API key diverifikasi oleh Apps Script. Aplikasi belum memiliki login pengguna; sebelum mempublikasikan data kebugaran pribadi, aktifkan proteksi akses pada site Netlify atau tambahkan autentikasi pengguna. Proxy publik dapat menerima permintaan dari siapa pun yang mengetahui URL site, termasuk permintaan estimasi foto yang dapat memakai kuota/API berbayar. Batasi akses/rate limit dan kuota API, batasi pembagian URL deployment, dan rotasi key jika bocor. `localStorage` adalah backup lokal pada browser/perangkat yang sama, bukan pengganti backup spreadsheet.
+
+## PWA dan akses offline
+
+Aplikasi dapat dipasang dari tombol **Pasang aplikasi** atau menu browser setelah dibuka melalui HTTPS (atau `localhost`). Service worker menyimpan shell aplikasi sehingga dashboard dapat dibuka kembali offline; data lokal tetap tersedia pada perangkat tersebut. Sinkronisasi Google Sheets, pemindaian OCR yang memerlukan Tesseract.js dari CDN, font eksternal, dan analisis foto memerlukan koneksi internet. Perubahan aplikasi baru diterapkan saat service worker diperbarui.
 
 ## Menjalankan lokal
 

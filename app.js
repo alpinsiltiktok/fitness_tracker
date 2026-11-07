@@ -2484,7 +2484,51 @@ function setupFitnessCoach() {
   });
 }
 
+function setupPwa() {
+  const installButton = $('#pwa-install-button');
+  const installPromptSupported = 'onbeforeinstallprompt' in window;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+  let deferredInstallPrompt = null;
+
+  if (isStandalone) installButton.hidden = true;
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+  });
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    installButton.hidden = true;
+    notify('Stride & Spoon berhasil dipasang.');
+  });
+  installButton.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) {
+      notify(
+        installPromptSupported
+          ? 'Opsi pemasangan belum tersedia. Buka menu browser dan pilih Pasang aplikasi.'
+          : 'Buka menu Bagikan browser, lalu pilih Tambahkan ke Layar Utama.',
+      );
+      return;
+    }
+
+    await deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    if (outcome === 'accepted') installButton.hidden = true;
+  });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register(new URL('./sw.js', import.meta.url), {
+      scope: new URL('./', import.meta.url).pathname,
+    }).catch((error) => {
+      console.error('PWA service worker registration failed:', error);
+    });
+  }
+}
+
 function initialize() {
+  setupPwa();
   setDefaultDates();
   const currentWeek = weekDateKeys(0);
   activityChartDateRange = { start: currentWeek[0], end: currentWeek[6] };

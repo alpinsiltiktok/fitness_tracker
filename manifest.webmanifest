@@ -1,0 +1,27 @@
+{
+  "id": "./",
+  "name": "Stride & Spoon — Fitness Tracker",
+  "short_name": "Stride & Spoon",
+  "description": "Catat nutrisi, olahraga, kalori, dan progres harian.",
+  "lang": "id",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#101812",
+  "theme_color": "#101812",
+  "icons": [
+    {
+      "src": "./icons/stride-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/stride-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -32,6 +32,10 @@ a { color: inherit; text-decoration: none; }
 .brand strong { display: block; font: 800 16px Manrope, sans-serif; letter-spacing: -.06em; }
 .brand strong span { color: var(--lime); }
 .brand small { display: block; margin-top: 3px; color: var(--muted); font-size: 8px; font-weight: 700; letter-spacing: .17em; }
+.topbar-actions { display: flex; align-items: center; gap: 14px; }
+.pwa-install-button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--lime); font-size: 10px; font-weight: 700; cursor: pointer; }
+.pwa-install-button:hover { border-color: var(--lime); }
+.pwa-install-button[hidden] { display: none; }
 .sync-state { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; }
 .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #e8bd62; box-shadow: 0 0 12px #e8bd6255; }
 .sync-state[data-state="online"] .sync-dot { background: var(--lime); box-shadow: 0 0 12px #c8f16966; }
@@ -294,6 +298,9 @@ canvas { display: block; width: 100%; height: 100%; }
 
 @media (max-width: 390px) {
   .app-shell { padding: 0 12px; }
+  .topbar-actions { gap: 7px; }
+  .pwa-install-button { width: 30px; height: 30px; justify-content: center; padding: 0; font-size: 16px; }
+  .pwa-install-button span:last-child { display: none; }
   .sync-state { gap: 5px; font-size: 9px; }
   .brand { gap: 8px; }
   .brand-mark { width: 34px; height: 34px; }

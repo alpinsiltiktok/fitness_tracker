@@ -6,6 +6,8 @@
     <meta name="theme-color" content="#101812">
     <meta name="description" content="Catat asupan kalori, makro, lari, dan progres mingguan Anda.">
     <title>Stride & Spoon — Fitness Tracker</title>
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icons/stride-icon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -20,8 +22,13 @@
           <span class="brand-mark" aria-hidden="true">S</span>
           <span><strong>stride<span>&</span>spoon</strong><small>DAILY FITNESS JOURNAL</small></span>
         </a>
-        <div class="sync-state" id="sync-state" data-state="loading" role="status" aria-live="polite">
-          <span class="sync-dot"></span><span id="sync-label">Menghubungkan...</span>
+        <div class="topbar-actions">
+          <button class="pwa-install-button" id="pwa-install-button" type="button" aria-label="Pasang aplikasi">
+            <span aria-hidden="true">↓</span><span>Pasang aplikasi</span>
+          </button>
+          <div class="sync-state" id="sync-state" data-state="loading" role="status" aria-live="polite">
+            <span class="sync-dot"></span><span id="sync-label">Menghubungkan...</span>
+          </div>
         </div>
       </header>
 

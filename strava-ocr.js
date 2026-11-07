@@ -59,15 +59,18 @@ function parseStravaText(text) {
     }
   }
 
+  let averageSpeed = '';
+  let fallbackSpeed = '';
   const metricLines = new Set();
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
     const line = lines[lineIndex];
     const nearbyLines = [lines[lineIndex - 1], line, lines[lineIndex + 1]].filter(Boolean);
     const nearbyText = nearbyLines.join(' ');
     const hasPaceLabel = /\b(?:average\s+pace|avg\.?\s*pace|pace)\b/i.test(nearbyText);
-    const isNonDistanceMetric = /\b(?:speed|pace|elev(?:ation)?|gain)\b/i.test(line);
+    const isNonDistanceMetric = /\b(?:speed|pace|elev(?:ation)?|gain)\b/i.test(line)
+      || /\b(?:km|mi)\s*\/\s*h\b/i.test(line);
     const distance = !isNonDistanceMetric && (
-      line.match(/(?:distance\D{0,8})?(\d{1,4}(?:[.,]\d{1,3})?)\s*(km|mi)\b/i)
+      line.match(/(?:distance\D{0,8})?(\d{1,4}(?:[.,]\d{1,3})?)\s*(km|mi)\b(?!\s*\/)/i)
       || line.match(/(?:distance|pool length)\D{0,10}(\d{1,6}(?:[.,]\d+)?)\s*(m)\b/i)
     );
     if (distance) {
@@ -87,6 +90,8 @@ function parseStravaText(text) {
     const paceText = hasPaceLabel ? nearbyText : line;
     const swimPace = paceText.match(/(\d{1,2}):([0-5]\d)\s*(?:min(?:utes?)?\s*)?\/\s*(100\s*m|100m)\b/i);
     const speed = paceText.match(/(\d{1,3}(?:[.,]\d+)?)\s*(km\/h|kmh|kph|mi\/h|mph)\b/i);
+    const hasMaximumSpeedLabel = /\bmax(?:imum)?\.?\s*speed\b/i.test(nearbyText);
+    const hasAverageSpeedLabel = /\b(?:average|avg\.?)\s*speed\b/i.test(nearbyText);
     const pace = paceText.match(/(\d{1,2}):([0-5]\d)\s*(?:min(?:utes?)?\s*)?\/\s*(km|mi)\b/i)
       || paceText.match(/(\d{1,2}):([0-5]\d)\s*(km|mi)\b/i)
       || (hasPaceLabel && !/\b\d{1,2}:\d{2}:\d{2}\b/.test(paceText)
@@ -97,7 +102,11 @@ function parseStravaText(text) {
     } else if (speed) {
       const unit = speed[2].toLowerCase();
       const normalizedUnit = unit.startsWith('mi') ? 'mph' : 'km/h';
-      extracted.pace = `${speed[1].replace(',', '.')} ${normalizedUnit}`;
+      if (!hasMaximumSpeedLabel) {
+        const formattedSpeed = `${speed[1].replace(',', '.')} ${normalizedUnit}`;
+        if (hasAverageSpeedLabel) averageSpeed = formattedSpeed;
+        else if (!fallbackSpeed) fallbackSpeed = formattedSpeed;
+      }
       metricLines.add(line);
     } else if (pace) {
       let paceSeconds = Number(pace[1]) * 60 + Number(pace[2]);
@@ -121,7 +130,8 @@ function parseStravaText(text) {
       metricLines.add(line);
     }
 
-    if (/\b(?:elev(?:ation)?(?:\s+gain)?|gain)\b/i.test(nearbyText)) {
+    if (/\b(?:elev(?:ation)?(?:\s+gain)?|gain)\b/i.test(nearbyText)
+      && !/\bmax(?:imum)?\.?\s*elev(?:ation)?\b/i.test(nearbyText)) {
       for (const candidate of [line, lines[lineIndex - 1], lines[lineIndex + 1]].filter(Boolean)) {
         const elevation = candidate.match(/(\d{1,3}(?:,\d{3})+|\d{1,6}(?:[.,]\d+)?)\s*(m|ft)\b/i);
         const labeledValue = candidate.match(/\b(?:elev(?:ation)?(?:\s+gain)?|gain)\b\D{0,12}(\d{1,3}(?:,\d{3})+|\d{1,6}(?:[.,]\d+)?)(?![\d.,])/i);
@@ -143,14 +153,26 @@ function parseStravaText(text) {
     }
   }
 
-  const titleLine = lines.find((line) => {
+  if (extracted.activityType === 'cycling') {
+    extracted.pace = averageSpeed || fallbackSpeed || extracted.pace;
+  }
+
+  const isTitleCandidate = (line) => {
     if (metricLines.has(line) || line.length < 2 || line.length > 100) return false;
     if (/^(run|running|trail run|ride|riding|cycling|bike|biking|virtual ride|swim|swimming|pool swim|open water swim|walk|walking|hike|hiking|mountaineering|row|rowing|virtual row|workout|free training|weight training|strength training|crossfit|yoga)$/i.test(line)) return false;
     if (new RegExp(`\\b${MONTHS}\\s+\\d{1,2}`, 'i').test(line)) return false;
     if (/^(distance|pace|average pace|avg\.? pace|average speed|avg\.? speed|moving time|elapsed time|elevation|elevation gain|map|photos?|activity|overview|share|edit|more|today|ride|cycling|run|swim|workout)\b/i.test(line)) return false;
     if (/\b\d{1,2}:\d{2}\s*(?:AM|PM)\b/i.test(line)) return false;
     return !/^\d+(?:[.,]\d+)?\s*(?:km|mi|m|ft)\b/i.test(line);
-  });
+  };
+  const titleCandidates = lines.filter(isTitleCandidate);
+  const activityHeaderIndex = lines.findIndex((line) => (
+    /\b(?:today|yesterday)\b.*\b\d{1,2}:\d{2}\s*(?:AM|PM)\b/i.test(line)
+    || new RegExp(`\\b${MONTHS}\\s+\\d{1,2},?\\s+\\d{4}`, 'i').test(line)
+  ));
+  const titleLine = activityHeaderIndex >= 0
+    ? lines.slice(activityHeaderIndex + 1).find(isTitleCandidate)
+    : titleCandidates[0];
   if (titleLine) extracted.title = titleLine;
 
   return extracted;

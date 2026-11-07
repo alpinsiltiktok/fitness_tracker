@@ -1935,6 +1935,14 @@ function applyOcrFields(fields) {
   if (fields.pace) logForm.elements.namedItem('pace').value = fields.pace;
   if (fields.movingTime) logForm.elements.namedItem('movingTime').value = fields.movingTime;
   if (fields.elevationM) logForm.elements.namedItem('elevationM').value = fields.elevationM;
+  updateCalorieEstimate();
+  const caloriesInput = logForm.elements.namedItem('calories');
+  const estimate = Number($('#estimate-calories').dataset.estimate);
+  if (!caloriesInput.value && Number.isFinite(estimate) && estimate > 0) {
+    caloriesInput.value = String(estimate);
+    return true;
+  }
+  return false;
 }
 
 function setupOcr() {
@@ -1955,7 +1963,7 @@ function setupOcr() {
       const result = await recognizeStravaScreenshot(file, (progress) => {
         progressBar.style.width = `${Math.round(progress * 100)}%`;
       });
-      applyOcrFields(result.fields);
+      const estimatedCaloriesFilled = applyOcrFields(result.fields);
       const fieldLabels = {
         title: 'judul',
         date: 'tanggal',
@@ -1968,6 +1976,7 @@ function setupOcr() {
       const found = Object.entries(result.fields)
         .filter(([, value]) => value)
         .map(([key]) => fieldLabels[key]);
+      if (estimatedCaloriesFilled) found.push('estimasi kalori');
       status.textContent = found.length
         ? `Otomatis terisi: ${found.join(', ')}. Periksa kembali sebelum menyimpan.`
         : 'Gambar terbaca, tetapi data aktivitas belum dikenali. Isi formulir secara manual atau coba gambar lain.';

@@ -90,8 +90,9 @@ function parseStravaText(text) {
     const paceText = hasPaceLabel ? nearbyText : line;
     const swimPace = paceText.match(/(\d{1,2}):([0-5]\d)\s*(?:min(?:utes?)?\s*)?\/\s*(100\s*m|100m)\b/i);
     const speed = paceText.match(/(\d{1,3}(?:[.,]\d+)?)\s*(km\/h|kmh|kph|mi\/h|mph)\b/i);
-    const hasMaximumSpeedLabel = /\bmax(?:imum)?\.?\s*speed\b/i.test(nearbyText);
-    const hasAverageSpeedLabel = /\b(?:average|avg\.?)\s*speed\b/i.test(nearbyText);
+    const speedLabelText = [lines[lineIndex - 1], line].filter(Boolean).join(' ');
+    const hasMaximumSpeedLabel = /\bmax(?:imum)?\.?\s*speed\b/i.test(speedLabelText);
+    const hasAverageSpeedLabel = /\b(?:average|avg\.?)\s*speed\b/i.test(speedLabelText);
     const pace = paceText.match(/(\d{1,2}):([0-5]\d)\s*(?:min(?:utes?)?\s*)?\/\s*(km|mi)\b/i)
       || paceText.match(/(\d{1,2}):([0-5]\d)\s*(km|mi)\b/i)
       || (hasPaceLabel && !/\b\d{1,2}:\d{2}:\d{2}\b/.test(paceText)
@@ -155,6 +156,13 @@ function parseStravaText(text) {
 
   if (extracted.activityType === 'cycling') {
     extracted.pace = averageSpeed || fallbackSpeed || extracted.pace;
+    if (!extracted.pace && extracted.distanceKm && extracted.movingTime) {
+      const duration = extracted.movingTime.match(/^(?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)$/);
+      if (duration) {
+        const hours = Number(duration[1] || 0) + Number(duration[2]) / 60 + Number(duration[3]) / 3600;
+        if (hours > 0) extracted.pace = `${(Number(extracted.distanceKm) / hours).toFixed(1)} km/h`;
+      }
+    }
   }
 
   const isTitleCandidate = (line) => {

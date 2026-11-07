@@ -183,7 +183,7 @@ function durationValue(seconds) {
 function normalizeActivityType(value) {
   const type = String(value || '').toLowerCase().replace(/[^a-z]/g, '');
   if (/run|trailrun/.test(type)) return 'run';
-  if (/ride|cycling|bikeride|handcycle/.test(type)) return 'cycling';
+  if (/ride|cycling|bik(?:e|ing)|handcycle/.test(type)) return 'cycling';
   if (/swim/.test(type)) return 'swimming';
   if (/walk/.test(type)) return 'walking';
   if (/hike|mountaineering/.test(type)) return 'hiking';
@@ -204,7 +204,14 @@ function createActivity(row, columnIndexes, index, seenIds) {
   if (seenIds.has(externalId)) return null;
   seenIds.add(externalId);
 
-  const activityType = normalizeActivityType(get('Activity Type') || get('Type'));
+  const rawActivityType = get('Activity Type') || get('Type');
+  let activityType = normalizeActivityType(rawActivityType);
+  if (/^(workout|free training)$/i.test(String(rawActivityType).trim())) {
+    const specificType = [get('Type'), title]
+      .map(normalizeActivityType)
+      .find((type) => type !== 'other' && type !== 'strength');
+    if (specificType) activityType = specificType;
+  }
   const distanceKm = Math.max(0, numericValue(get('Distance')) / 1000);
   const movingSeconds = numericValue(get('Moving Time')) || numericValue(get('Elapsed Time'));
   const movingTime = durationValue(movingSeconds);

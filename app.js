@@ -8,7 +8,7 @@ const STORAGE_KEY = 'stride-spoon.logs.v1';
 const BODY_STORAGE_KEY = 'stride-spoon.body-measurements.v1';
 const GOALS_KEY = 'stride-spoon.goals.v1';
 const GEMINI_NEXT_MODEL_KEY = 'stride-spoon.gemini-next-model.v1';
-const API_URL = '/.netlify/functions/sheets';
+const API_URL = 'https://alpinsil-fitnestracker.netlify.app/.netlify/functions/sheets';
 const ACTIVITY_MET = {
   run: 8.3, cycling: 6.8, swimming: 6, walking: 3.8, hiking: 6,
   rowing: 7, strength: 5, pushups: 8, yoga: 3, other: 5, custom: 5,

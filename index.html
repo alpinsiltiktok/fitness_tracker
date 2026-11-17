@@ -427,6 +427,12 @@
               </select>
             </label>
           </div>
+          <label class="history-search-label" for="history-search">
+            Cari aktivitas, nama makanan, atau jarak minimum
+            <input class="text-input" id="history-search" type="search" placeholder="Contoh: nasi, lari pagi, 5 km" aria-describedby="history-search-help">
+          </label>
+          <small class="history-search-help" id="history-search-help">Angka seperti 5 atau 5 km mencari olahraga dengan jarak minimal 5 km. Pencarian mengikuti rentang waktu yang dipilih.</small>
+          <p class="history-search-status" id="history-search-status" aria-live="polite"></p>
           <div class="strava-import-box">
             <div>
               <strong>Sinkronkan arsip Strava</strong>

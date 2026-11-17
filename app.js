@@ -2,6 +2,7 @@ import { recognizeStravaScreenshot } from './strava-ocr.js';
 import { parseStravaZip } from './strava-import.js';
 import { prepareFoodPhoto, recognizeFoodLabel } from './food-scan.js';
 import { AKG_PROFILE_LABEL, NUTRIENTS, NUTRIENT_FIELDS } from './nutrition.js';
+import { filterFitnessRecords } from './search.js';
 
 const STORAGE_KEY = 'stride-spoon.logs.v1';
 const BODY_STORAGE_KEY = 'stride-spoon.body-measurements.v1';
@@ -1834,18 +1835,23 @@ function formatActivityDate(value) {
 function filteredRecords() {
   const filter = $('#history-filter').value;
   const visible = activeRecords();
-  if (filter === 'all') return visible;
-  const days = Number(filter);
-  const earliest = new Date();
-  earliest.setHours(0, 0, 0, 0);
-  earliest.setDate(earliest.getDate() - (days - 1));
-  const earliestKey = localDateKey(earliest);
-  return visible.filter((record) => dateKey(record.date) >= earliestKey);
+  const inDateRange = filter === 'all'
+    ? visible
+    : (() => {
+      const days = Number(filter);
+      const earliest = new Date();
+      earliest.setHours(0, 0, 0, 0);
+      earliest.setDate(earliest.getDate() - (days - 1));
+      const earliestKey = localDateKey(earliest);
+      return visible.filter((record) => dateKey(record.date) >= earliestKey);
+    })();
+  return filterFitnessRecords(inDateRange, $('#history-search').value);
 }
 
 function renderHistory() {
   const list = $('#activity-list');
   const filtered = filteredRecords();
+  const query = $('#history-search').value.trim();
   const shown = filtered.slice(0, visibleRecords);
   list.replaceChildren();
 
@@ -1907,8 +1913,17 @@ function renderHistory() {
     list.append(item);
   }
 
-  $('#empty-history').classList.toggle('hidden', filtered.length > 0);
+  const emptyHistory = $('#empty-history');
+  emptyHistory.textContent = query
+    ? (/^\d+(?:[.,]\d+)?\s*(?:km)?$/i.test(query)
+      ? `Tidak ada olahraga dengan jarak minimal ${query.replace(/\s*km$/i, '')} km pada rentang ini.`
+      : `Tidak ada catatan yang cocok dengan "${query}".`)
+    : 'Belum ada catatan. Tambahkan makanan atau aktivitas pertamamu.';
+  emptyHistory.classList.toggle('hidden', filtered.length > 0);
   $('#load-more').classList.toggle('hidden', shown.length >= filtered.length);
+  $('#history-search-status').textContent = query
+    ? `${filtered.length} catatan cocok pada rentang waktu yang dipilih.`
+    : '';
 }
 
 function render() {
@@ -2627,6 +2642,10 @@ function initialize() {
     }
   });
   $('#history-filter').addEventListener('change', () => {
+    visibleRecords = 8;
+    renderHistory();
+  });
+  $('#history-search').addEventListener('input', () => {
     visibleRecords = 8;
     renderHistory();
   });

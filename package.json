@@ -2,6 +2,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test": "node --test search.test.js",
     "start": "node local-server.mjs",
     "start:configured": "node --env-file=.env.local local-server.mjs"
   }

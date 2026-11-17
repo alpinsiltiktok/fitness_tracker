@@ -1,9 +1,10 @@
-const CACHE_NAME = 'stride-spoon-shell-v1';
+const CACHE_NAME = 'stride-spoon-shell-v2';
 const APP_SHELL = [
   './',
   './index.html',
   './styles.css',
   './app.js',
+  './search.js',
   './nutrition.js',
   './food-scan.js',
   './strava-import.js',

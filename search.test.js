@@ -5,6 +5,7 @@ import { filterFitnessRecords, parseFitnessSearchQuery } from './search.js';
 const records = [
   { type: 'workout', title: 'Lari pagi', activityType: 'run', distanceKm: 5 },
   { type: 'workout', title: 'Lari sore', activityType: 'run', distanceKm: 4.99 },
+  { type: 'workout', title: 'Lari tanpa jarak', activityType: 'run' },
   { type: 'workout', title: 'Jalan santai', activityType: 'walking', distanceKm: 6 },
   { type: 'meal', title: 'Nasi ayam', calories: 650 },
 ];
@@ -40,5 +41,16 @@ test('teks mencari nama makanan serta nama dan jenis aktivitas', () => {
   assert.deepEqual(
     filterFitnessRecords(records, 'jalan').map((record) => record.title),
     ['Jalan santai'],
+  );
+});
+
+test('kata kunci dan jarak minimum dapat digabung', () => {
+  assert.deepEqual(
+    filterFitnessRecords(records, 'lari 5km').map((record) => record.title),
+    ['Lari pagi'],
+  );
+  assert.deepEqual(
+    filterFitnessRecords(records, 'lari 5 km').map((record) => record.title),
+    ['Lari pagi'],
   );
 });
